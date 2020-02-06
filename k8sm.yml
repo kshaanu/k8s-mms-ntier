@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: Pod 
+metadata: 
+  name: web 
+  labels:
+    web: server 
+spec:
+  containers: 
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Pod 
+metadata: 
+  name: app 
+  labels:
+    app: server 
+spec:
+  containers: 
+  - name: tomcat
+    image: tomcat:latest 
+    ports:
+    - containerPort: 8080
+--- 
+apiVersion: v1
+kind: Pod 
+metadata: 
+  name: db 
+  labels:
+    db: server 
+spec:
+  containers: 
+  - name: mysql
+    image: mysql
+    ports:
+    - containerPort: 3306
+--- 
+apiVersion: v1
+kind: Namespace 
+metadata:
+  name: envd 
+  labels:
+    env: dev 
+--- 
+apiVersion: v1
+kind: Namespace 
+metadata:
+  name: envt 
+  labels:
+    env: test
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-ser
+spec:
+  selector:
+    pod: web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3551
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-ser 
+spec:
+  type: NodePort
+  selector:
+    pod: app
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 3559
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-ser
+spec:
+  type: NodePort
+  selector:
+    pod: db
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3556
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-wa  
+  namespace: envd
+  labels:
+    dep: web-app
+spec:
+ selector: 
+   matchLabels: 
+     web: server 
+     app: server
+ template: 
+  metadata:
+   labels:
+     web: server
+     app: server
+  spec: 
+    containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+      - name: tomcat
+        image: tomcat:latest
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-wab
+  namespace: envt
+  labels:
+    dep: web-app-db
+spec:    
+ selector: 
+   matchLabels: 
+     web: server 
+     app: server
+     db: server
+ template: 
+  metadata:
+   labels:
+     web: server
+     app: server 
+     db: server
+  spec: 
+    containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+      - name: tomcat
+        image: tomcat:latest
+        ports:
+        - containerPort: 8080
+      - name: mysql
+        image: mysql
+        ports: 
+        - containerPort: 3306
+ 
+
+    
+
+  
+         
